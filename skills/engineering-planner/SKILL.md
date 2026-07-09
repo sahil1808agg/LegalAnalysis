@@ -1,16 +1,7 @@
 ---
 name: engineering-planner
 description: >
-  Acts as a Senior Software Architect to transform a Product Requirements Document (PRD)
-  into a complete, implementation-ready Engineering Specification Document. Use this skill
-  whenever a user provides a PRD, product brief, feature request document, project description,
-  or any requirements document and wants it turned into a technical engineering spec.
-  Also trigger when the user says things like "write an engineering spec", "create a technical
-  spec from this PRD", "turn this into an engineering document", "I need an engineering spec
-  before we start building", "generate a spec from my requirements", or "what do we need to
-  build this". Always use this skill before any implementation begins — the output is the
-  foundation that an AI coding agent or developer will use to build the application without
-  needing to re-read the PRD.
+   Transforms a PRD, product brief, feature request, or project description into a comprehensive Engineering Document (High-Level Design). Trigger when a user asks to create an engineering document, engineering doc, HLD, system architecture, technical design, or wants to convert requirements into a technical plan. The output defines the application architecture, technology stack, core components,data flow, APIs, database design, integrations, security considerations,deployment approach, and implementation roadmap before development begins.
 ---
 
 **Frontend:** Next.js (fixed — do not ask about frontend framework).
