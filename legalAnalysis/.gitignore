@@ -1,0 +1,15 @@
+# Environment secrets — never commit
+.env.local
+.env.*.local
+.env
+
+# Next.js
+contractiq/.next/
+contractiq/node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TypeScript build info
+*.tsbuildinfo

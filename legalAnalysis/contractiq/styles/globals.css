@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Semantic tokens */
+  --text-primary:   #070A0E;
+  --text-secondary: #4A4C4F;
+  --bg-primary:     #FFFFFF;
+  --bg-surface:     #FAFAFA;
+  --bg-subtle:      #F0F0F1;
+  --brand:          #115ACB;
+
+  /* Spacing tokens (4px grid) */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-28: 112px;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-md
+           bg-blue-500 text-white text-sm font-medium
+           transition-colors duration-100 ease-out
+           hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-md
+           bg-transparent border border-grey-100 text-grey-900 text-sm font-medium
+           transition-colors duration-100 ease-out
+           hover:bg-grey-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+           bg-green-50 border border-green-500 text-green-700;
+  }
+
+  .badge-warning {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+           bg-yellow-50 border border-yellow-500 text-yellow-800;
+  }
+
+  .badge-error {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+           bg-red-50 border border-red-500 text-red-700;
+  }
+}
