@@ -1,4 +1,8 @@
-import { PDFParse } from 'pdf-parse'
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js'
+
+// Disable the PDF.js worker — not available in Node.js serverless environments.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+;(pdfjsLib as any).GlobalWorkerOptions.workerSrc = ''
 
 const MAX_PAGES = 20
 const MIN_WORDS = 100
@@ -15,30 +19,34 @@ export type ExtractError = 'SCANNED_PDF' | 'TOO_MANY_PAGES' | 'TOKEN_LIMIT_EXCEE
 export async function extractPDFText(
   buffer: Buffer
 ): Promise<{ ok: true; result: ExtractResult } | { ok: false; error: ExtractError }> {
-  const parser = new PDFParse({ data: buffer })
+  const uint8 = new Uint8Array(buffer)
+  const doc = await pdfjsLib.getDocument({ data: uint8 }).promise
 
-  let result: Awaited<ReturnType<typeof parser.getText>>
-  try {
-    result = await parser.getText()
-  } finally {
-    await parser.destroy()
-  }
-
-  const pageCount = result.total
+  const pageCount = doc.numPages
 
   if (pageCount > MAX_PAGES) {
+    await doc.destroy()
     return { ok: false, error: 'TOO_MANY_PAGES' }
   }
 
-  // Build segmented text with [PAGE N] markers
-  const segmented = result.pages.length > 0
-    ? result.pages
-        .map((p) => `[PAGE ${p.num}] ${p.text.trim()}`)
-        .join(' ')
-        .trim()
-    : `[PAGE 1] ${result.text.trim()}`
+  const pageTexts: string[] = []
+  for (let i = 1; i <= pageCount; i++) {
+    const page = await doc.getPage(i)
+    const content = await page.getTextContent()
+    const pageText = content.items
+      .map((item) => ('str' in item ? item.str : ''))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    pageTexts.push(`[PAGE ${i}] ${pageText}`)
+    page.cleanup()
+  }
 
+  await doc.destroy()
+
+  const segmented = pageTexts.join(' ').trim()
   const wordCount = segmented.split(/\s+/).filter(Boolean).length
+
   if (wordCount < MIN_WORDS) {
     return { ok: false, error: 'SCANNED_PDF' }
   }

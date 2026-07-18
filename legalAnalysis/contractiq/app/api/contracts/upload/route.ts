@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+export const maxDuration = 25
 import { createClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/security/authGuard'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/security/rateLimiter'
