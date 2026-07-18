@@ -1,9 +1,5 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js'
 
-// Disable the PDF.js worker — not available in Node.js serverless environments.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-;(pdfjsLib as any).GlobalWorkerOptions.workerSrc = ''
-
 const MAX_PAGES = 20
 const MIN_WORDS = 100
 const MAX_TOKENS = 15000
@@ -20,9 +16,21 @@ export async function extractPDFText(
   buffer: Buffer
 ): Promise<{ ok: true; result: ExtractResult } | { ok: false; error: ExtractError }> {
   const uint8 = new Uint8Array(buffer)
-  const doc = await pdfjsLib.getDocument({ data: uint8 }).promise
 
-  const pageCount = doc.numPages
+  // useSystemFonts avoids the network fetch for standard font data.
+  // disableRange/disableStream/disableAutoFetch prevent range-request
+  // or streaming behaviour that doesn't work in a serverless context.
+  const loadingTask = (pdfjsLib as any).getDocument({
+    data: uint8,
+    useSystemFonts: true,
+    isEvalSupported: false,
+    disableRange: true,
+    disableStream: true,
+    disableAutoFetch: true,
+  })
+
+  const doc = await loadingTask.promise
+  const pageCount: number = doc.numPages
 
   if (pageCount > MAX_PAGES) {
     await doc.destroy()
@@ -33,8 +41,8 @@ export async function extractPDFText(
   for (let i = 1; i <= pageCount; i++) {
     const page = await doc.getPage(i)
     const content = await page.getTextContent()
-    const pageText = content.items
-      .map((item) => ('str' in item ? item.str : ''))
+    const pageText = (content.items as Array<{ str?: string }>)
+      .map((item) => item.str ?? '')
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim()
