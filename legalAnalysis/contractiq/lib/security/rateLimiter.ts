@@ -19,23 +19,35 @@ export async function checkRateLimit({
   limit,
   windowSeconds,
 }: RateLimitConfig): Promise<RateLimitResult> {
-  const supabase = createAdminClient()
-  const windowStart = new Date(Date.now() - windowSeconds * 1000).toISOString()
+  try {
+    const supabase = createAdminClient()
+    const windowStart = new Date(Date.now() - windowSeconds * 1000).toISOString()
 
-  const { count } = await supabase
-    .from('rate_limit_events')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('action', action)
-    .gte('created_at', windowStart)
+    const { count, error: countError } = await supabase
+      .from('rate_limit_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('action', action)
+      .gte('created_at', windowStart)
 
-  if ((count ?? 0) >= limit) {
-    return { allowed: false, retryAfter: windowSeconds }
+    // If the table is missing or any DB error occurs, fail open so a schema
+    // oversight never blocks legitimate requests.
+    if (countError) {
+      console.error('Rate limit check failed (failing open):', countError.message)
+      return { allowed: true }
+    }
+
+    if ((count ?? 0) >= limit) {
+      return { allowed: false, retryAfter: windowSeconds }
+    }
+
+    await supabase.from('rate_limit_events').insert({ user_id: userId, action })
+
+    return { allowed: true }
+  } catch (err) {
+    console.error('Rate limit check threw (failing open):', err)
+    return { allowed: true }
   }
-
-  await supabase.from('rate_limit_events').insert({ user_id: userId, action })
-
-  return { allowed: true }
 }
 
 export function rateLimitResponse(retryAfter: number): NextResponse {

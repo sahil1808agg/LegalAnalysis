@@ -1,4 +1,13 @@
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js'
+import * as pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.js'
+
+// Register the bundled worker on globalThis so pdfjs-dist's
+// _mainThreadWorkerMessageHandler getter (which reads globalThis.pdfjsWorker)
+// returns it without falling back to:
+//   eval("require")("./pdf.worker.js")
+// That eval path bypasses webpack — the file is never in the Netlify
+// serverless bundle, causing MODULE_NOT_FOUND at runtime.
+;(globalThis as any).pdfjsWorker = pdfjsWorker
 
 const MAX_PAGES = 20
 const MIN_WORDS = 100

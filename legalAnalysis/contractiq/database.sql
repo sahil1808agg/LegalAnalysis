@@ -136,6 +136,21 @@ COMMENT ON COLUMN user_feedback.rating  IS '"up" = helpful; "down" = not helpful
 COMMENT ON COLUMN user_feedback.comment IS 'Optional free-text comment submitted alongside the rating.';
 
 
+-- -----------------------------------------------------------------------------
+-- rate_limit_events
+-- Tracks per-user action counts for server-side rate limiting.
+-- No user-facing RLS policies — accessed exclusively via the service role key.
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS rate_limit_events (
+  id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  action     text        NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE rate_limit_events ENABLE ROW LEVEL SECURITY;
+
+
 -- =============================================================================
 -- 3. INDEXES
 -- =============================================================================
@@ -161,6 +176,10 @@ CREATE INDEX IF NOT EXISTS chat_messages_created_at_idx ON chat_messages (create
 
 -- user_feedback: checked for duplicates on every feedback submission
 CREATE INDEX IF NOT EXISTS user_feedback_contract_id_idx ON user_feedback (contract_id);
+
+-- rate_limit_events: looked up on every rate-limited action
+CREATE INDEX IF NOT EXISTS idx_rate_limit_events_lookup
+  ON rate_limit_events (user_id, action, created_at DESC);
 
 
 -- =============================================================================
